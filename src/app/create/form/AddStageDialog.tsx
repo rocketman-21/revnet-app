@@ -89,7 +89,7 @@ export function AddStageDialog({
       ? `$${formikValues.tokenSymbol}`
       : "tokens";
 
-    const [cashOutTax, setCashOutTax] = useState(initialValues?.priceFloorTaxIntensity || 20); // Default to 0.2
+    const [cashOutTax, setCashOutTax] = useState(initialValues?.priceFloorTaxIntensity || 20); // default to 20%
 
     // Discrete values matching your radio options
     const steps = [0, 20, 40, 60, 80];
@@ -411,22 +411,42 @@ export function AddStageDialog({
                         </span>
                       ))}
                     </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={80}
-                      step={10}
-                      name="priceFloorTaxIntensity"
-                      value={cashOutTax}
-                      onChange={(e: any) => {
-                        const numValue = parseFloat(e.target.value);
-                        const closestHalfStep = Math.round(numValue * 20) / 20;
-                        setCashOutTax(closestHalfStep);
-                        values.priceFloorTaxIntensity = String(closestHalfStep);
-                      }}
-                      className="w-full h-2 bg-gray-200 appearance-none cursor-pointer accent-teal-500"
-                      aria-label="Exit tax percentage"
-                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="range"
+                        min={0}
+                        max={80}
+                        step={10}
+                        name="priceFloorTaxIntensity"
+                        value={cashOutTax}
+                        onChange={(e: any) => {
+                          const numValue = parseFloat(e.target.value);
+                          const closestHalfStep = Math.round(numValue * 20) / 20;
+                          setCashOutTax(closestHalfStep);
+                          values.priceFloorTaxIntensity = String(closestHalfStep);
+                        }}
+                        className="w-full h-2 bg-gray-200 appearance-none cursor-pointer accent-teal-500"
+                        aria-label="Exit tax percentage"
+                      />
+                      <Field
+                        id="priceFloorTaxIntensityInput"
+                        name="priceFloorTaxIntensity"
+                        type="number"
+                        min="0"
+                        max="80"
+                        step="0.1"
+                        className="h-9 w-20"
+                        suffix="%"
+                        value={cashOutTax}
+                        onChange={(e: any) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val)) {
+                            setCashOutTax(val);
+                            values.priceFloorTaxIntensity = String(val);
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="text-sm font-medium text-zinc-500 mt-4 border-l border-zinc-300 pl-2 py-1 px-1">
                     Cashing out 10% of {revnetTokenSymbol} gets {calculateYield(Number(cashOutTax))}% of the revnet's {nativeTokenSymbol}.
