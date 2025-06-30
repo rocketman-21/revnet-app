@@ -16,8 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  defaultStageData } from "../constants";
+import { defaultStageData } from "../constants";
 import { Field, FieldGroup } from "./Fields";
 import {
   Tooltip,
@@ -51,7 +50,7 @@ function NotesSection({
       >
         <div className="font-sm">{title}</div>
         <span
-          className={`transform transition-transform font-sm ${
+          className={`font-sm transform transition-transform ${
             isOpen ? "rotate-90" : "rotate-0"
           }`}
         >
@@ -61,7 +60,7 @@ function NotesSection({
 
       {/* Dropdown Content */}
       {isOpen && (
-        <div className="mt-2 pl-4 text-gray-600 text-md">{children}</div>
+        <div className="text-md mt-2 pl-4 text-gray-600">{children}</div>
       )}
     </div>
   );
@@ -81,7 +80,9 @@ export function AddStageDialog({
   const { values: formikValues } = useFormikContext<RevnetFormData>();
 
   const [open, setOpen] = useState(false);
-  const [initialIssuance, setInitialIssuance] = useState(initialValues?.initialIssuance || "10000");
+  const [initialIssuance, setInitialIssuance] = useState(
+    initialValues?.initialIssuance || "10000",
+  );
   const nativeTokenSymbol = useNativeTokenSymbol();
 
   const revnetTokenSymbol =
@@ -89,16 +90,18 @@ export function AddStageDialog({
       ? `$${formikValues.tokenSymbol}`
       : "tokens";
 
-    const [cashOutTax, setCashOutTax] = useState(initialValues?.priceFloorTaxIntensity || 20); // Default to 0.2
+  const [cashOutTax, setCashOutTax] = useState(
+    initialValues?.priceFloorTaxIntensity || 20,
+  ); // Default to 0.2
 
-    // Discrete values matching your radio options
-    const steps = [0, 20, 40, 60, 80];
+  // Discrete values matching your radio options
+  const steps = [0, 20, 40, 60, 80];
 
-    // Calculate example yield based on selected tax rate
-    const calculateYield = (taxRate: number) => {
-      console.log({taxRate});
-      return (Number(((1-(taxRate/100))+((taxRate/100)/10))) * 10).toFixed(1);
-    };
+  // Calculate example yield based on selected tax rate
+  const calculateYield = (taxRate: number) => {
+    console.log({ taxRate });
+    return (Number(1 - taxRate / 100 + taxRate / 100 / 10) * 10).toFixed(1);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -118,15 +121,15 @@ export function AddStageDialog({
             {({ values }) => (
               <Form>
                 <div className="pb-6">
-
                   <div>
-                    <div className="block text-md font-semibold leading-6">
+                    <div className="text-md block font-semibold leading-6">
                       1. Issuance
                     </div>
-                    <p className="text-md text-zinc-500 mt-3">
-                      How many {revnetTokenSymbol} to issue when receiving 1 {nativeTokenSymbol}.
+                    <p className="text-md mt-3 text-zinc-500">
+                      How many {revnetTokenSymbol} to issue when receiving 1{" "}
+                      {nativeTokenSymbol}.
                     </p>
-                    <div className="flex flex-wrap md:flex-nowrap gap-4 sm:gap-2 items-center text-md text-zinc-600 mt-2">
+                    <div className="text-md mt-2 flex flex-wrap items-center gap-4 text-zinc-600 sm:gap-2 md:flex-nowrap">
                       <div className="w-full sm:w-[200px] lg:w-[200px] xl:w-[200px]">
                         <FieldGroup
                           id="initialIssuance"
@@ -142,7 +145,7 @@ export function AddStageDialog({
                           suffix={`${revnetTokenSymbol} / ${nativeTokenSymbol}`}
                         />
                       </div>
-                      <div className="flex items-center gap-2 w-full md:w-auto">
+                      <div className="flex w-full items-center gap-2 md:w-auto">
                         <label
                           htmlFor="priceCeilingIncreasePercentage"
                           className="whitespace-nowrap"
@@ -173,44 +176,167 @@ export function AddStageDialog({
                         />
                         days.
                       </div>
-                      </div>
-                  <div>
+                    </div>
+                    <div>
+                      <FieldArray
+                        name="splits"
+                        render={(arrayHelpers) => (
+                          <div>
+                            {values.splits.map((_, index) => (
+                              <div
+                                key={index}
+                                className="text-md mt-4 flex items-center gap-2 text-zinc-600"
+                              >
+                                <label
+                                  className="whitespace-nowrap"
+                                  htmlFor={`splits.${index}.amount`}
+                                >
+                                  {index === 0 ? "Split" : "... and"}
+                                </label>
+                                <Field
+                                  id={`splits.${index}.percentage`}
+                                  name={`splits.${index}.percentage`}
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  className="h-9"
+                                  width="w-28"
+                                  suffix="%"
+                                  required
+                                  placeholder="100"
+                                />
+                                <label
+                                  htmlFor={`splits.${index}.defaultBeneficiary`}
+                                >
+                                  to
+                                </label>
+                                <Field
+                                  id={`splits.${index}.defaultBeneficiary`}
+                                  name={`splits.${index}.defaultBeneficiary`}
+                                  className="h-9"
+                                  placeholder="0x"
+                                  required
+                                  defaultValue={
+                                    formikValues.stages[0]?.initialOperator ||
+                                    ""
+                                  }
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => arrayHelpers.remove(index)}
+                                  className="h-9 px-0 sm:px-3"
+                                >
+                                  <TrashIcon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                arrayHelpers.push({
+                                  percentage: "",
+                                  defaultBeneficiary: "",
+                                })
+                              }
+                              className="mt-3 h-7 border border-zinc-200 bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"
+                            >
+                              add split +
+                            </Button>
+                          </div>
+                        )}
+                      />
+                      {values.splits.length > 0 && (
+                        <div className="mt-4 border-l border-zinc-300 px-1 py-1 pl-2 text-sm font-medium text-zinc-500">
+                          Total split limit of{" "}
+                          {values.splits.reduce(
+                            (sum, split) =>
+                              sum + (Number(split.percentage) || 0),
+                            0,
+                          )}
+                          %, payer always receives{" "}
+                          {100 -
+                            values.splits.reduce(
+                              (sum, split) =>
+                                sum + (Number(split.percentage) || 0),
+                              0,
+                            )}
+                          % of issuance.
+                        </div>
+                      )}
+                      {values.splits.length == 0 && (
+                        <div className="mt-4 border-l border-zinc-300 px-1 py-1 pl-2 text-sm font-medium text-zinc-500">
+                          Without splits, the payer always receives 100% of
+                          issuance.
+                        </div>
+                      )}
+                      {values.splits.length > 0 && (
+                        <div className="text-md mt-4 flex items-center gap-2 whitespace-nowrap text-zinc-600">
+                          <label
+                            className="whitespace-nowrap"
+                            htmlFor="priceCeilingIncreasePercentage"
+                          >
+                            ... operated by
+                          </label>
+                          <Field
+                            id="initialOperator"
+                            name="initialOperator"
+                            className=""
+                            placeholder={
+                              stageIdx > 0
+                                ? formikValues.stages[0].initialOperator
+                                : "0x"
+                            }
+                            disabled={stageIdx > 0}
+                          />
+                          {stageIdx > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger>[ ? ]</TooltipTrigger>
+                              <TooltipContent side="left">
+                                Set the operator in the first stage
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <FieldArray
-                      name="splits"
+                      name="autoIssuance"
                       render={(arrayHelpers) => (
                         <div>
-                          {values.splits.map((_, index) => (
+                          <p className="text-md mt-5 text-zinc-500">
+                            Optionally, auto-issue {revnetTokenSymbol} when the
+                            stage starts.
+                          </p>
+                          {values.autoIssuance?.map((_, index) => (
                             <div
                               key={index}
-                              className="flex gap-2 items-center text-md text-zinc-600 mt-4"
+                              className="text-md mt-4 flex items-center gap-2 text-zinc-600"
                             >
-                              <label
-                                className="whitespace-nowrap"
-                                htmlFor={`splits.${index}.amount`}>
-                                {index === 0 ? "Split" : "... and"}
+                              <label htmlFor={`autoIssuance.${index}.amount`}>
+                                {index === 0 ? "Issue" : "...and"}
                               </label>
                               <Field
-                                id={`splits.${index}.percentage`}
-                                name={`splits.${index}.percentage`}
+                                id={`autoIssuance.${index}.amount`}
+                                name={`autoIssuance.${index}.amount`}
                                 type="number"
                                 min="0"
-                                max="100"
                                 className="h-9"
-                                width="w-28"
-                                suffix="%"
+                                suffix={`${revnetTokenSymbol}`}
                                 required
-                                placeholder="100"
+                                // width="w-72" // mobile padding issue
                               />
-                              <label htmlFor={`splits.${index}.defaultBeneficiary`}>
+                              <label
+                                htmlFor={`autoIssuance.${index}.beneficiary`}
+                              >
                                 to
                               </label>
                               <Field
-                                id={`splits.${index}.defaultBeneficiary`}
-                                name={`splits.${index}.defaultBeneficiary`}
+                                id={`autoIssuance.${index}.beneficiary`}
+                                name={`autoIssuance.${index}.beneficiary`}
                                 className="h-9"
                                 placeholder="0x"
                                 required
-                                defaultValue={formikValues.stages[0]?.initialOperator || ""}
                               />
                               <Button
                                 variant="ghost"
@@ -224,216 +350,173 @@ export function AddStageDialog({
                           ))}
                           <Button
                             type="button"
-                            onClick={() => arrayHelpers.push({ percentage: "", defaultBeneficiary: "" })}
-                            className="h-7 mt-3 bg-zinc-100 border border-zinc-200 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"
+                            onClick={() => {
+                              console.log(values);
+                              arrayHelpers.push({
+                                amount: "",
+                                beneficiary: "",
+                              });
+                            }}
+                            className="mt-3 h-7 border border-zinc-200 bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"
                           >
-                           add split +
+                            add auto issuance +
                           </Button>
+                          {values.autoIssuance.length > 0 && (
+                            <div className="mt-4 border-l border-zinc-300 px-1 py-1 pl-2 text-sm font-medium text-zinc-500">
+                              Total auto issuance of{" "}
+                              {commaNumber(
+                                values.autoIssuance?.reduce(
+                                  (sum, issuance) =>
+                                    sum + (Number(issuance.amount) || 0),
+                                  0,
+                                ),
+                              )}{" "}
+                              {revnetTokenSymbol}.
+                            </div>
+                          )}
                         </div>
                       )}
                     />
-                    {
-                      values.splits.length > 0  && <div className="text-sm font-medium text-zinc-500 mt-4 border-l border-zinc-300 pl-2 py-1 px-1">
-                        Total split limit of {values.splits.reduce((sum, split) => sum + (Number(split.percentage) || 0), 0)}%, payer always receives {100 - values.splits.reduce((sum, split) => sum + (Number(split.percentage) || 0), 0)}% of issuance.
+                    <NotesSection>
+                      <div className="text-md mt-4 italic text-zinc-600">
+                        <ul className="list-inside list-disc space-y-2">
+                          <li className="flex">
+                            <span className="mr-2">•</span>
+                            Cutting issuance by 50% means to double the price –
+                            a halvening effect.
+                          </li>
+                          <li className="flex">
+                            <span className="mr-2">•</span>
+                            If there's a market for {revnetTokenSymbol} /{" "}
+                            {nativeTokenSymbol} offering a better price, all{" "}
+                            {nativeTokenSymbol} paid in will be used to buyback
+                            instead of feeding the revnet. Uniswap is used as
+                            the market.
+                          </li>
+                          <li className="flex">
+                            <span className="mr-2">•</span>
+                            Splits apply to both issuance and buybacks.
+                          </li>
+                          <li className="flex">
+                            <span className="mr-2">•</span>
+                            <span>
+                              You can write and deploy a custom split hook that
+                              automatically receives and processes the split{" "}
+                              {revnetTokenSymbol}. See{" "}
+                              <a
+                                className="inline underline"
+                                target="_blank"
+                                href="https://docs.juicebox.money/v4/build/hooks/split-hook/"
+                              >
+                                {" "}
+                                the docs.
+                              </a>
+                            </span>
+                          </li>
+                          <li className="flex">
+                            <span className="mr-2">•</span>
+                            If there are splits, the operator can change the
+                            distribution of the split limit to new destinations
+                            at any time.
+                          </li>
+                          <li className="flex">
+                            <span className="mr-2">•</span>
+                            The operator can be a multisig, a DAO, an LLC, a
+                            core team, an airdrop stockpile, a staking rewards
+                            contract, or some other address.
+                          </li>
+                          <li className="flex">
+                            <span className="mr-2">•</span>
+                            The operator is set once and is not bound by stages.
+                            The operator can hand off this responsibility to
+                            another address at any time, or relinquish it
+                            altogether.
+                          </li>
+                        </ul>
                       </div>
-                    }
-                    {
-                      values.splits.length == 0 && <div className="text-sm font-medium text-zinc-500 mt-4 border-l border-zinc-300 pl-2 py-1 px-1">
-                        Without splits, the payer always receives 100% of issuance.
-                      </div>
-                    }
-                  {
-                    values.splits.length > 0 && (
-                  <div className="mt-4 flex gap-2 items-center text-md text-zinc-600 whitespace-nowrap">
-                    <label
-                    className="whitespace-nowrap"
-                    htmlFor="priceCeilingIncreasePercentage">
-                      ... operated by
-                    </label>
-                    <Field
-                      id="initialOperator"
-                      name="initialOperator"
-                      className=""
-                      placeholder={
-                        stageIdx > 0
-                          ? formikValues.stages[0].initialOperator
-                          : "0x"
-                      }
-                      disabled={stageIdx > 0}
-                    />
-                    {stageIdx > 0 && (
-                      <Tooltip>
-                        <TooltipTrigger>[ ? ]</TooltipTrigger>
-                        <TooltipContent side="left">
-                          Set the operator in the first stage
-                        </TooltipContent>
-                      </Tooltip>
-                      )}
-                    </div>
-                  )}
-                  </div>
-                  <FieldArray
-                    name="autoIssuance"
-                    render={(arrayHelpers) => (
-                      <div>
-                        <p className="text-md text-zinc-500 mt-5">
-                          Optionally, auto-issue {revnetTokenSymbol} when the stage starts.
-                        </p>
-                        {values.autoIssuance?.map((_, index) => (
-                          <div
-                            key={index}
-                            className="flex gap-2 items-center text-md text-zinc-600 mt-4"
-                          >
-                            <label htmlFor={`autoIssuance.${index}.amount`}>
-                              {index === 0 ? "Issue" : "...and"}
-                            </label>
-                            <Field
-                              id={`autoIssuance.${index}.amount`}
-                              name={`autoIssuance.${index}.amount`}
-                              type="number"
-                              min="0"
-                              className="h-9"
-                              suffix={`${revnetTokenSymbol}`}
-                              required
-                              // width="w-72" // mobile padding issue
-                            />
-                            <label
-                              htmlFor={`autoIssuance.${index}.beneficiary`}
-                            >
-                              to
-                            </label>
-                            <Field
-                              id={`autoIssuance.${index}.beneficiary`}
-                              name={`autoIssuance.${index}.beneficiary`}
-                              className="h-9"
-                              placeholder="0x"
-                              required
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => arrayHelpers.remove(index)}
-                              className="h-9 px-0 sm:px-3"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            console.log(values);
-                            arrayHelpers.push({ amount: "", beneficiary: "" });
-                          }}
-                          className="h-7 mt-3 bg-zinc-100 border border-zinc-200 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"
-                        >
-                          add auto issuance +
-                        </Button>
-                        { values.autoIssuance.length > 0 && <div className="text-sm font-medium text-zinc-500 mt-4 border-l border-zinc-300 pl-2 py-1 px-1">
-                          Total auto issuance of {" "}
-                          {commaNumber(values.autoIssuance?.reduce((sum, issuance) => sum + (Number(issuance.amount) || 0), 0))}
-                          {" "}{revnetTokenSymbol}.
-                        </div>
-                        }
-                      </div>
-                    )}
-                  />
-                  <NotesSection>
-                    <div className="text-zinc-600 text-md mt-4 italic">
-                      <ul className="list-disc list-inside space-y-2">
-                        <li className="flex">
-                          <span className="mr-2">•</span>
-                          Cutting issuance by 50% means to double the price – a
-                          halvening effect.
-                        </li>
-                        <li className="flex">
-                          <span className="mr-2">•</span>
-                          If there's a market for {revnetTokenSymbol} /{" "}
-                          {nativeTokenSymbol} offering a better price, all{" "}
-                          {nativeTokenSymbol} paid in will be used to buyback
-                          instead of feeding the revnet. Uniswap is used as
-                          the market.
-                        </li>
-                        <li className="flex">
-                          <span className="mr-2">•</span>
-                          Splits apply to both issuance and buybacks.
-                        </li>
-                        <li className="flex">
-                          <span className="mr-2">•</span>
-                          <span>
-                            You can write and deploy a custom split hook that automatically receives and processes the split {revnetTokenSymbol}. See <a className="inline underline" target="_blank" href="https://docs.juicebox.money/v4/build/hooks/split-hook/"> the docs.</a>
-                          </span>
-                        </li>
-                        <li className="flex">
-                          <span className="mr-2">•</span>
-                          If there are splits, the operator can change the distribution of the split
-                          limit to new destinations at any time.
-                        </li>
-                        <li className="flex">
-                          <span className="mr-2">•</span>
-                          The operator can be a multisig, a DAO, an LLC, a core
-                          team, an airdrop stockpile, a staking rewards
-                          contract, or some other address.
-                        </li>
-                        <li className="flex">
-                          <span className="mr-2">•</span>
-                          The operator is set once and is not bound by stages.
-                          The operator can hand off this responsibility to
-                          another address at any time, or relinquish it
-                          altogether.
-                        </li>
-                      </ul>
-                    </div>
-                  </NotesSection>
+                    </NotesSection>
                   </div>
                 </div>
 
                 <div className="pb-10">
                   <div
                     id="priceFloorTaxIntensity-group"
-                    className="block text-md font-semibold leading-6"
+                    className="text-md block font-semibold leading-6"
                   >
                     2. Cash out tax
                   </div>
-                  <p className="text-md text-zinc-500 mt-3">
-                    The only way for anyone to access {revnetTokenSymbol} revenue is by cashing out or
-                    taking out a loan against their {revnetTokenSymbol}.
-                    A tax can be added that makes cashing
+                  <p className="text-md mt-3 text-zinc-500">
+                    The only way for anyone to access {revnetTokenSymbol}{" "}
+                    revenue is by cashing out or taking out a loan against their{" "}
+                    {revnetTokenSymbol}. A tax can be added that makes cashing
                     out and taking out loans more expensive, while rewarding{" "}
                     {revnetTokenSymbol} holders who stick around as others cash
                     out.
                   </p>
-                  <div className="space-y-2 mt-6">
-                    <div className="flex justify-between relative w-full">
+                  <div className="mt-6 space-y-2">
+                    <div className="relative flex w-full justify-between">
                       {steps.map((step) => (
-                        <span key={Number(step) / 100} className={ Number(step) === 0 ? "text-sm pl-1" : Number(step) === 20 ? "text-sm pl-4" : "text-sm pl-2"}>
+                        <span
+                          key={Number(step) / 100}
+                          className={
+                            Number(step) === 0
+                              ? "pl-1 text-sm"
+                              : Number(step) === 20
+                                ? "pl-4 text-sm"
+                                : "pl-2 text-sm"
+                          }
+                        >
                           {Number(step) / 100}
                         </span>
                       ))}
                     </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={80}
-                      step={10}
-                      name="priceFloorTaxIntensity"
-                      value={cashOutTax}
-                      onChange={(e: any) => {
-                        const numValue = parseFloat(e.target.value);
-                        const closestHalfStep = Math.round(numValue * 20) / 20;
-                        setCashOutTax(closestHalfStep);
-                        values.priceFloorTaxIntensity = String(closestHalfStep);
-                      }}
-                      className="w-full h-2 bg-gray-200 appearance-none cursor-pointer accent-teal-500"
-                      aria-label="Exit tax percentage"
-                    />
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min={0}
+                        max={80}
+                        step={10}
+                        name="priceFloorTaxIntensity"
+                        value={cashOutTax}
+                        onChange={(e: any) => {
+                          const numValue = parseFloat(e.target.value);
+                          const closestHalfStep =
+                            Math.round(numValue * 20) / 20;
+                          setCashOutTax(closestHalfStep);
+                          values.priceFloorTaxIntensity =
+                            String(closestHalfStep);
+                        }}
+                        className="h-2 w-full cursor-pointer appearance-none bg-gray-200 accent-teal-500"
+                        aria-label="Exit tax percentage"
+                      />
+                      <Field
+                        id="customCashOutTax"
+                        type="number"
+                        min={0}
+                        max={80}
+                        step={1}
+                        suffix="%"
+                        className="h-9 w-24"
+                        value={cashOutTax}
+                        onChange={(e: any) => {
+                          const numValue = Math.min(
+                            Math.max(parseFloat(e.target.value), 0),
+                            80,
+                          );
+                          setCashOutTax(numValue);
+                          values.priceFloorTaxIntensity = String(numValue);
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="text-sm font-medium text-zinc-500 mt-4 border-l border-zinc-300 pl-2 py-1 px-1">
-                    Cashing out 10% of {revnetTokenSymbol} gets {calculateYield(Number(cashOutTax))}% of the revnet's {nativeTokenSymbol}.
+                  <div className="mt-4 border-l border-zinc-300 px-1 py-1 pl-2 text-sm font-medium text-zinc-500">
+                    Cashing out 10% of {revnetTokenSymbol} gets{" "}
+                    {calculateYield(Number(cashOutTax))}% of the revnet's{" "}
+                    {nativeTokenSymbol}.
                   </div>
                   <NotesSection>
-                    <div className="text-zinc-600 text-md mt-4 italic">
-                      <ul className="list-disc list-inside space-y-2">
+                    <div className="text-md mt-4 italic text-zinc-600">
+                      <ul className="list-inside list-disc space-y-2">
                         <li className="flex">
                           <span className="mr-2">•</span>
                           The higher the tax, the less that can be accessed by
@@ -444,7 +527,9 @@ export function AddStageDialog({
 
                         <li className="flex">
                           <span className="mr-2">•</span>
-                            Loans are an automated source of revenue for {revnetTokenSymbol}. By making loans more expensive, a higher cash out tax reduces potential loan revenue.
+                          Loans are an automated source of revenue for{" "}
+                          {revnetTokenSymbol}. By making loans more expensive, a
+                          higher cash out tax reduces potential loan revenue.
                         </li>
                         <li className="flex">
                           <span className="mr-2">•</span>
@@ -482,7 +567,7 @@ export function AddStageDialog({
                       width="w-32"
                     />
                     <NotesSection>
-                      <ul className="list-disc list-inside">
+                      <ul className="list-inside list-disc">
                         <li className="flex">
                           <span className="mr-2">•</span>
                           <div>
