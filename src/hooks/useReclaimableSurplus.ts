@@ -19,11 +19,11 @@ export function useReclaimableSurplus(params: {
     chainId,
     args:
       projectId && tokenAmount
-        ? [projectId, tokenAmount, [], [], BigInt(decimals), BigInt(currencyId)]
+        ? [projectId, applyRevFee(tokenAmount), [], [], BigInt(decimals), BigInt(currencyId)]
         : undefined,
   });
 
-  const afterFees = raw ? applyNanaFee(applyRevFee(raw)) : undefined;
+  const afterFees = raw ? applyNanaFee(raw) : undefined;
 
   return { data: afterFees, raw, ...rest };
 }

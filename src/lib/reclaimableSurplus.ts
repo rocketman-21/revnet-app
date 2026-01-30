@@ -30,14 +30,14 @@ export async function getReclaimableSurplus(
 
     const userReclaimable = await contract.read.currentReclaimableSurplusOf([
       BigInt(projectId),
-      tokenAmountWei,
+      applyRevFee(tokenAmountWei),
       [],
       [],
       BigInt(decimals),
       BigInt(currencyId),
     ]);
 
-    return applyNanaFee(applyRevFee(userReclaimable)).toString();
+    return applyNanaFee(userReclaimable).toString();
   } catch (error) {
     console.debug({ chainId, projectId, tokenAmountWei, version, decimals, currencyId });
     console.error(error);
