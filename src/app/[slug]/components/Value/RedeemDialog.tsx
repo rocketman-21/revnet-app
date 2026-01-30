@@ -21,7 +21,9 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { ProjectDocument, SuckerGroupDocument } from "@/generated/graphql";
 import { useProjectBaseToken } from "@/hooks/useProjectBaseToken";
-import { getUnitValue, Surplus } from "@/lib/reclaimableSurplus";
+import { useReclaimableSurplus } from "@/hooks/useReclaimableSurplus";
+import { formatDecimals } from "@/lib/number";
+import { Surplus } from "@/lib/reclaimableSurplus";
 import { getTokenConfigForChain } from "@/lib/tokenUtils";
 import { formatWalletError } from "@/lib/utils";
 import {
@@ -32,7 +34,6 @@ import {
   jbMultiTerminalAbi,
   JBProjectToken,
   NATIVE_TOKEN,
-  NATIVE_TOKEN_DECIMALS,
 } from "juice-sdk-core";
 import {
   JBChainId,
@@ -43,7 +44,7 @@ import {
   useSuckers,
   useSuckersUserTokenBalance,
 } from "juice-sdk-react";
-import { PropsWithChildren, useMemo, useState } from "react";
+import { PropsWithChildren, useState } from "react";
 import { parseUnits } from "viem";
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
@@ -133,16 +134,21 @@ export function RedeemDialog(props: PropsWithChildren<Props>) {
   // For USDC projects: receive USDC (the project's base token)
   const tokenToReceive = isNative ? NATIVE_TOKEN : selectedChainToken;
 
-  const projects = suckerGroupData?.suckerGroup?.projects?.items;
+  const selectedSurplus = surpluses.find((s) => s.chainId === Number(cashOutChainId));
+  const baseDecimals = baseToken?.decimals ?? 18;
 
-  const unitValue = useMemo(() => {
-    if (!cashOutChainId) return 0;
-    const surplus = surpluses.find((s) => s.chainId === Number(cashOutChainId)) || null;
-    const tokenSupply =
-      projects?.find((p) => p.chainId === Number(cashOutChainId))?.tokenSupply ?? "0";
+  const { data: reclaimableAmount } = useReclaimableSurplus({
+    chainId: cashOutChainId ? (Number(cashOutChainId) as JBChainId) : undefined,
+    projectId: redeemAmountBN ? effectiveProjectId : undefined,
+    tokenAmount: redeemAmountBN || undefined,
+    version,
+    decimals: baseDecimals,
+    currencyId: selectedSurplus?.currencyId ?? 1,
+  });
 
-    return getUnitValue(surplus, { value: tokenSupply, decimals: projectTokenDecimals });
-  }, [cashOutChainId, projectTokenDecimals, surpluses, projects]);
+  const expectedReclaim = reclaimableAmount
+    ? Number(formatUnits(reclaimableAmount, baseDecimals))
+    : 0;
 
   return (
     <Dialog open={disabled === true ? false : undefined}>
@@ -250,7 +256,7 @@ export function RedeemDialog(props: PropsWithChildren<Props>) {
                     <div className="text-base mt-4">
                       You'll get ~{" "}
                       <span className="font-medium">
-                        {(unitValue * Number(redeemAmount)).toFixed(5)} {baseToken?.symbol}
+                        {formatDecimals(expectedReclaim, 5)} {baseToken?.symbol}
                       </span>
                     </div>
                   ) : null}
@@ -284,12 +290,12 @@ export function RedeemDialog(props: PropsWithChildren<Props>) {
                       address: primaryNativeTerminal.data,
                       args: [
                         address, // holder
-                        effectiveProjectId, // project id (use the correct project ID for the selected chain)
-                        redeemAmount ? parseUnits(redeemAmount, NATIVE_TOKEN_DECIMALS) : 0n, // cash out count
-                        tokenToReceive, // token to reclaim (what you want to receive)
-                        0n, // min tokens reclaimed
+                        effectiveProjectId, // project id
+                        redeemAmount ? parseUnits(redeemAmount, JB_TOKEN_DECIMALS) : 0n, // cash out count
+                        tokenToReceive, // token to reclaim
+                        reclaimableAmount ?? 0n, // min tokens reclaimed (fees already applied)
                         address, // beneficiary
-                        DEFAULT_METADATA, // metadata],
+                        DEFAULT_METADATA, // metadata
                       ],
                     });
                   } catch (err) {
