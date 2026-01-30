@@ -18,27 +18,30 @@ import { ClaimButton } from "./ClaimButton";
 import { ToRemoteButton } from "./ToRemoteButton";
 import { TransactionsFilter } from "./TransactionsFilter";
 
+type Transaction = Pick<
+  SuckerTransaction,
+  | "createdAt"
+  | "chainId"
+  | "peerChainId"
+  | "status"
+  | "beneficiary"
+  | "projectTokenCount"
+  | "terminalTokenAmount"
+  | "sucker"
+  | "token"
+  | "index"
+  | "peer"
+>;
+
 interface Props {
-  transactions: Pick<
-    SuckerTransaction,
-    | "createdAt"
-    | "chainId"
-    | "peerChainId"
-    | "status"
-    | "beneficiary"
-    | "projectTokenCount"
-    | "terminalTokenAmount"
-    | "sucker"
-    | "token"
-    | "index"
-    | "peer"
-  >[];
+  transactionsPromise: Promise<Transaction[]>;
   tokenDecimals: number;
   tokenSymbol: string;
 }
 
 export async function SuckerTransactionsTable(props: Props) {
-  const { transactions, tokenDecimals, tokenSymbol } = props;
+  const { transactionsPromise, tokenDecimals, tokenSymbol } = props;
+  const transactions = await transactionsPromise;
 
   const hasTransactions = transactions.length > 0;
 

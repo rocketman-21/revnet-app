@@ -370,7 +370,6 @@ export function ReallocateDialog({
                     {borrowStatus === "granting-permission" && "Granting permission..."}
                     {borrowStatus === "permission-granted" &&
                       "Permission granted. Reallocating loan..."}
-                    {borrowStatus === "approving" && "Approving token allowance..."}
                     {borrowStatus === "waiting-signature" && "Waiting for wallet confirmation..."}
                     {borrowStatus === "pending" && "Reallocating loan..."}
                     {borrowStatus === "reallocation-pending" && "Reallocating loan..."}

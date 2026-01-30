@@ -327,7 +327,6 @@ export function BorrowDialog(props: PropsWithChildren<Props>) {
                 {borrowStatus === "checking" && "Checking permissions..."}
                 {borrowStatus === "granting-permission" && "Granting permission..."}
                 {borrowStatus === "permission-granted" && "Permission granted. Creating loan..."}
-                {borrowStatus === "approving" && "Approving token allowance..."}
                 {borrowStatus === "waiting-signature" && "Waiting for wallet confirmation..."}
                 {borrowStatus === "pending" && "Creating loan..."}
                 {borrowStatus === "reallocation-pending" && "Adjusting loan..."}

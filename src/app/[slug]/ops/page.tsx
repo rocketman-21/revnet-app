@@ -35,7 +35,7 @@ export default async function OpsPage(props: Props) {
   const surplusesPromise = getProjectsReclaimableSurplus(projects);
 
   const filterStatus = statusSchema.safeParse(status).data as SuckerTransactionStatus | undefined;
-  const suckerTransactions = getSuckerTransactions(
+  const transactionsPromise = getSuckerTransactions(
     project.suckerGroupId,
     version,
     chainId,
@@ -54,7 +54,7 @@ export default async function OpsPage(props: Props) {
 
       <Suspense>
         <SuckerTransactionsTable
-          transactions={await suckerTransactions}
+          transactionsPromise={transactionsPromise}
           tokenDecimals={project.decimals ?? NATIVE_TOKEN_DECIMALS}
           tokenSymbol={project.tokenSymbol ?? "ETH"}
         />
