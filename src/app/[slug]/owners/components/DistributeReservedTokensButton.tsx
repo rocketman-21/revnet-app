@@ -9,15 +9,15 @@ import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 interface Props {
   chainId: JBChainId;
+  projectId: bigint;
 }
 
 export function DistributeReservedTokensButton(props: Props) {
-  const { chainId } = props;
+  const { chainId, projectId } = props;
 
   const { toast } = useToast();
 
   const {
-    projectId,
     contracts: { controller },
   } = useJBContractContext();
 

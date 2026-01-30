@@ -96,7 +96,7 @@ export function SplitsSection() {
     address: selectedSucker?.peerChainId
       ? contractAddress(JBCoreContracts.JBController, selectedSucker.peerChainId)
       : undefined,
-    args: ruleset && ruleset?.data ? [projectId] : undefined,
+    args: ruleset && ruleset?.data ? [selectedSucker?.projectId ?? projectId] : undefined,
   });
 
   useEffect(() => {
@@ -254,7 +254,10 @@ export function SplitsSection() {
         </div>
       </div>
       <div className="flex gap-2 mt-4">
-        <DistributeReservedTokensButton chainId={selectedSucker?.peerChainId || chainId!} />
+        <DistributeReservedTokensButton
+          chainId={selectedSucker?.peerChainId || chainId!}
+          projectId={selectedSucker?.projectId ?? projectId}
+        />
         <ChangeSplitRecipientsDialog
           stageId={selectedStageIdx}
           initialChainId={selectedSucker?.peerChainId as JBChainId}
