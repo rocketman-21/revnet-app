@@ -24,7 +24,7 @@ import {
   useSuckersUserTokenBalance,
 } from "juice-sdk-react";
 import { useCallback, useEffect, useState } from "react";
-import { Address, erc20Abi, formatUnits, parseUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import {
   useAccount,
   usePublicClient,
@@ -40,7 +40,6 @@ type BorrowState =
   | "checking"
   | "granting-permission"
   | "permission-granted"
-  | "approving"
   | "waiting-signature"
   | "pending"
   | "success"
@@ -564,37 +563,8 @@ export function useBorrowDialog({ projectId, selectedLoan, defaultTab }: UseBorr
       // Set minBorrowAmount to 0 as per the guidance
       const minBorrowAmount = 0n;
 
-      // Get base token symbol for allowance checking
-      const baseTokenSymbol = getTokenSymbolFromAddress(selectedChainTokenConfig.token);
-
       try {
         setBorrowStatus("waiting-signature");
-
-        // Check allowance for non-ETH base tokens
-        if (baseTokenSymbol !== "ETH" && publicClient && walletClient && newLoanBorrowableAmount) {
-          const baseTokenAddress = selectedChainTokenConfig.token;
-
-          const allowance = await publicClient.readContract({
-            address: baseTokenAddress,
-            abi: erc20Abi,
-            functionName: "allowance",
-            args: [address as Address, revLoansContractAddress as Address],
-          });
-
-          if (BigInt(allowance) < newLoanBorrowableAmount) {
-            setBorrowStatus("approving");
-
-            const approveHash = await walletClient.writeContract({
-              address: baseTokenAddress,
-              abi: erc20Abi,
-              functionName: "approve",
-              args: [revLoansContractAddress as Address, newLoanBorrowableAmount],
-            });
-
-            await publicClient.waitForTransactionReceipt({ hash: approveHash });
-            setBorrowStatus("waiting-signature");
-          }
-        }
 
         await reallocateCollateralAsync({
           abi: revLoansAbi,
@@ -676,39 +646,6 @@ export function useBorrowDialog({ projectId, selectedLoan, defaultTab }: UseBorr
         // collateralBigInt should be in project token decimals, not base token decimals
         const collateralBigInt = parseUnits(collateralAmount, projectTokenDecimals);
 
-        // Get base token symbol for allowance checking
-        const baseTokenSymbol = getTokenSymbolFromAddress(selectedChainTokenConfig.token);
-
-        // Check allowance for non-ETH base tokens (for standard borrow)
-        if (
-          baseTokenSymbol !== "ETH" &&
-          publicClient &&
-          walletClient &&
-          estimatedBorrowFromInputOnly
-        ) {
-          const baseTokenAddress = selectedChainTokenConfig.token;
-
-          const allowance = await publicClient.readContract({
-            address: baseTokenAddress,
-            abi: erc20Abi,
-            functionName: "allowance",
-            args: [address as Address, revLoansContractAddress as Address],
-          });
-
-          if (BigInt(allowance) < estimatedBorrowFromInputOnly) {
-            setBorrowStatus("approving");
-
-            const approveHash = await walletClient.writeContract({
-              address: baseTokenAddress,
-              abi: erc20Abi,
-              functionName: "approve",
-              args: [revLoansContractAddress as Address, estimatedBorrowFromInputOnly],
-            });
-
-            await publicClient.waitForTransactionReceipt({ hash: approveHash });
-            setBorrowStatus("waiting-signature");
-          }
-        }
         const args = [
           effectiveProjectId,
           {
